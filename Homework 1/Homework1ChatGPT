@@ -1,0 +1,44 @@
+function setup() {
+  createCanvas(600, 600);
+  background(245, 235, 220); // A warm beige for the background
+  
+  // Plate
+  noStroke();
+  fill(230, 230, 230);
+  ellipse(width / 2, height / 2, 500, 500);
+  
+  // Pasta (curved lines)
+  stroke(255, 228, 181); // Light pasta color
+  strokeWeight(3);
+  noFill();
+  for (let i = 0; i < 10; i++) {
+    let xOffset = random(-50, 50);
+    let yOffset = random(-50, 50);
+    bezier(200 + xOffset, 300 + yOffset, 300, 250, 400, 350, 400 + xOffset, 300 + yOffset);
+  }
+  
+  // Alfredo sauce (soft blobs)
+  noStroke();
+  fill(255, 255, 240, 180); // Creamy sauce
+  for (let i = 0; i < 8; i++) {
+    ellipse(random(250, 350), random(250, 350), random(60, 100), random(40, 80));
+  }
+  
+  // Chicken pieces (rectangles and ellipses)
+  fill(210, 180, 140); // Chicken color
+  for (let i = 0; i < 6; i++) {
+    let x = random(250, 350);
+    let y = random(250, 350);
+    rect(x, y, random(40, 60), random(20, 30), 10); // Rounded rectangle
+  }
+  
+  // Garnish (green sprinkles)
+  fill(34, 139, 34);
+  for (let i = 0; i < 30; i++) {
+    ellipse(random(200, 400), random(200, 400), 5, 5);
+  }
+}
+
+function draw() {
+  // Static scene, no animations
+}
