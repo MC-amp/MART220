@@ -1,0 +1,51 @@
+let circles = [];
+let title = "Dynamic Motion Art";
+
+function setup() {
+  createCanvas(600, 400);
+  textSize(16);
+  textAlign(LEFT, TOP);
+
+  // Initialize moving circles
+  for (let i = 0; i < 5; i++) {
+    circles.push({ x: random(width), y: random(height), size: random(20, 50) });
+  }
+}
+
+function draw() {
+  background(220);
+
+  // Display title in upper-left corner
+  fill(0);
+  text(title, 10, 10);
+
+  // Display name in lower-right corner
+  textAlign(RIGHT, BOTTOM);
+  text("Matthew", width - 10, height - 10);
+  textAlign(LEFT, TOP);
+
+  // Draw and move circles
+  for (let circle of circles) {
+    fill(random(100, 255), random(100, 255), random(100, 255));
+    ellipse(circle.x, circle.y, circle.size);
+
+    // Move randomly
+    if (frameCount % 30 === 0) {
+      circle.x = random(width);
+      circle.y = random(height);
+    }
+  }
+}
+
+// Change colors when the mouse is clicked
+function mousePressed() {
+  background(random(255), random(255), random(255));
+}
+
+// Move all shapes to new random locations when a key is pressed
+function keyPressed() {
+  for (let circle of circles) {
+    circle.x = random(width);
+    circle.y = random(height);
+  }
+}
