@@ -9,7 +9,7 @@ function preload(){
     }
 function setup(){
     createCanvas(800, 800);
-    setInterval(updateIndexIdle, 70);
+    setInterval(updateIndexIdle, 50);
 }
 function draw(){
     background(240);
