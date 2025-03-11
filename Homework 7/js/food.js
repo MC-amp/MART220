@@ -6,6 +6,7 @@ class food{
         this.y=y
     }
     draw() {
+        fill("green")
         circle(this.x,this.y,20)
     }
     }
