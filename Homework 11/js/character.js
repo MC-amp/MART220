@@ -7,9 +7,6 @@ class character {
     this.speed = 3;
     this.currentAnimation.rotationLock = true;
   }
-  getCurrentAnimation() {
-    return this.sprite;
-  }
   createAnimation() {
     this.currentAnimation = createSprite(this.x, this.y);
   }
