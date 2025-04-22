@@ -1,16 +1,18 @@
 var pinModel;
 var ball;
 var pins = [];
+var displacedPins = 0;
 
 function preload() {
   pinModel = loadModel('objects/Pin.obj');
+  myFont=loadFont('fonts/Roboto-Italic-VariableFont_wdth,wght.ttf');
 }
 
 function setup() {
   createCanvas(600, 1000, WEBGL);
 
   ball = {
-    pos: createVector(-15, 0, 500),
+    pos: createVector(-15, -20, 500),
     radius: 40,
     velocity: createVector(0, 0, 0),
     rotation: createVector(0, 0, 0),
@@ -53,7 +55,22 @@ function draw() {
   if (!ball.aiming && ball.velocity.mag() > 0.1) {
     ball.rotation.add(ball.rotationSpeed);
   }
-  
+
+  if (ball.pos.z <= -500) {
+    ball.velocity.set(0, 0, 0);
+    ball.aiming = true;
+    ball.pos.set(-15, -20, 500);
+    resetPins();
+  }
+
+  push();
+  translate(-width / 2, -height / 2, 0);
+  textFont(myFont);
+  textSize(32);
+  fill(0);
+  text('Score: ' + displacedPins, 20, 30);
+  pop();
+
   push();
   translate(ball.pos.x, ball.pos.y, ball.pos.z);
   rotateX(ball.rotation.x);
@@ -62,12 +79,14 @@ function draw() {
   sphere(ball.radius);
   pop();
 
+
   for (let pin of pins) {
     let d = p5.Vector.dist(ball.pos, pin.pos);
-    if (d < ball.radius + pin.radius) {
+    if (d < ball.radius + pin.radius && !pin.falling) {
       let pushDir = p5.Vector.sub(pin.pos, ball.pos).normalize();
       pin.velocity.add(p5.Vector.mult(pushDir, 1.5));
       pin.falling = true;
+      displacedPins++;
     }
   }
 
@@ -89,13 +108,15 @@ function draw() {
 
         a.falling = true;
         b.falling = true;
+        displacedPins++;
       }
     }
   }
 
+
   for (let pin of pins) {
     pin.pos.add(pin.velocity);
-    pin.velocity.mult(0.95);
+    pin.velocity.mult(0.99);
 
     push();
     translate(pin.pos.x, pin.pos.y, pin.pos.z);
@@ -109,6 +130,7 @@ function draw() {
     model(pinModel);
     pop();
   }
+
   if (ball.velocity.mag() > 0.1) {
     ball.rotation.x += 0.2;
     ball.rotation.z += 0.05;
@@ -116,9 +138,26 @@ function draw() {
 }
 
 function keyPressed() {
-  if (key === ' ' && ball.aiming) {
+  if (key === 'w' && ball.aiming) {
     ball.velocity = createVector(0, 0, -5);
     ball.rotationSpeed = createVector(0.3, 0, 0.1);
     ball.aiming = false;
+  }
+}
+
+function resetPins() {
+  var positions = [
+    [0, 0, 0], [2, 0, 0], [-2, 0, 0], [4, 0, 0],
+    [1, 0, 2], [-1, 0, 2], [3, 0, 2],
+    [2, 0, 4], [0, 0, 4],
+    [1, 0, 6]
+  ];
+
+  for (let i = 0; i < pins.length; i++) {
+    let p = positions[i];
+    pins[i].pos.set(p[0] * 25, 0, p[2] * 25);
+    pins[i].velocity.set(0, 0, 0);
+    pins[i].falling = false;
+    pins[i].rotation = 0;
   }
 }
