@@ -2,10 +2,13 @@ var pinModel;
 var ball;
 var pins = [];
 var displacedPins = 0;
-var whichRound = 1;
+var currentRound = 1;
 var gravity;
 var curveStrength = 0;
-var maxCurve = 0.2;
+var maxCurve = 0.3;
+var cubes = [];
+var cubeSize = 60;
+var hitCube = false;
 
 function preload() {
   pinModel = loadModel('objects/Pin.obj');
@@ -14,7 +17,6 @@ function preload() {
 
 function setup() {
   createCanvas(600, 1000, WEBGL);
-
   gravity = createVector(0, 0.2, 0);
 
   ball = {
@@ -45,18 +47,13 @@ function setup() {
       radius: 15
     });
   }
+
+  generateCubes();
 }
 
 function draw() {
   background(200);
-  let camX = 0;
-  let camY = -400;
-  let camZ = 1200;
-
-  camera(camX, camY, camZ,
-       0, 0, 0,
-       0, 1, 0);
-
+  camera(0, -400, 1200, 0, 0, 0, 0, 1, 0);
 
   push();
   rotateX(HALF_PI);
@@ -69,7 +66,6 @@ function draw() {
     ball.aimAngle += 0.05;
     ball.pos.x = 150 * sin(ball.aimAngle);
   } else {
-
     ball.velocity.add(gravity);
     ball.velocity.x += curveStrength;
     ball.pos.add(ball.velocity);
@@ -84,8 +80,8 @@ function draw() {
     ball.velocity.y = 0;
   }
 
-  if (ball.pos.z <= -600) {
-  whichRound+=1;
+  if (ball.pos.z <= -600 && !hitCube) {
+    currentRound++;
     ball.velocity.set(0, 0, 0);
     ball.aiming = true;
     ball.pos.set(-15, -40, 500);
@@ -98,7 +94,7 @@ function draw() {
   textSize(32);
   fill(0);
   text('Score: ' + displacedPins, 20, 30);
-  text('Round: ' + whichRound, 450, 30);
+  text('Round: ' + currentRound, 450, 30);
   pop();
 
   push();
@@ -109,13 +105,31 @@ function draw() {
   sphere(ball.radius);
   pop();
 
+  for (let cube of cubes) {
+    push();
+    translate(cube.pos.x, cube.pos.y, cube.pos.z);
+    fill(0, 0, 255);
+    box(cubeSize);
+    pop();
+
+    let d = dist(ball.pos.x, ball.pos.y, ball.pos.z, cube.pos.x, cube.pos.y, cube.pos.z);
+    if (d < ball.radius + cubeSize / 2 && !hitCube) {
+      hitCube = true;
+      ball.velocity.set(0, 0, 0);
+      ball.aiming = true;
+      ball.pos.set(-15, -40, 500);
+      currentRound++;
+      resetPins();
+    }
+  }
+
   for (let pin of pins) {
     let d = p5.Vector.dist(ball.pos, pin.pos);
-    if (d < ball.radius + pin.radius) {
+    if (d < ball.radius + pin.radius && !hitCube) {
       let pushDir = p5.Vector.sub(pin.pos, ball.pos).normalize();
       pin.velocity.add(p5.Vector.mult(pushDir, 1.5));
       if (!pin.falling) {
-        displacedPins+=1;
+        displacedPins++;
         pin.falling = true;
       }
     }
@@ -131,17 +145,16 @@ function draw() {
         let dir = p5.Vector.sub(b.pos, a.pos).normalize();
         b.pos.add(p5.Vector.mult(dir, overlap / 2));
         a.pos.sub(p5.Vector.mult(dir, overlap / 2));
-
         let pushVel = dir.copy().mult(0.5);
         a.velocity.sub(pushVel);
         b.velocity.add(pushVel);
 
         if (!a.falling) {
-          displacedPins+=1;
+          displacedPins++;
           a.falling = true;
         }
         if (!b.falling) {
-          displacedPins+=1;
+          displacedPins++;
           b.falling = true;
         }
       }
@@ -163,11 +176,9 @@ function draw() {
 
     push();
     translate(pin.pos.x, pin.pos.y, pin.pos.z);
-
     if (pin.falling && pin.rotation < HALF_PI) {
       pin.rotation += 0.03;
     }
-
     rotate(pin.rotation, pin.fallAxis);
     scale(-25);
     model(pinModel);
@@ -177,6 +188,11 @@ function draw() {
   if (ball.velocity.mag() > 0.1) {
     ball.rotation.x += 0.2;
     ball.rotation.z += 0.05;
+  }
+
+  if (currentRound >= 11) {
+    screen2();
+    noLoop();
   }
 }
 
@@ -201,7 +217,6 @@ function keyReleased() {
 }
 
 function resetPins() {
-  
   var positions = [
     [0, 0, -10], [2, 0, -10], [-2, 0, -10], [4, 0, -10],
     [1, 0, -8], [-1, 0, -8], [3, 0, -8],
@@ -216,4 +231,61 @@ function resetPins() {
     pins[i].falling = false;
     pins[i].rotation = 0;
   }
+
+  generateCubes();
+  hitCube = false;
+}
+
+function generateCubes() {
+  cubes = [];
+  let count = getCubeCountForRound(currentRound);
+
+  let attempts = 0;
+  while (cubes.length < count && attempts < 1000) {
+    let candidate = createVector(random(-200, 200), -30, random(0, 400));
+    let tooClose = false;
+
+    for (let other of cubes) {
+      if (p5.Vector.dist(candidate, other.pos) < 50) {
+        tooClose = true;
+        break;
+      }
+    }
+
+    if (!tooClose) {
+      cubes.push({ pos: candidate });
+    }
+
+    attempts++;
+  }
+}
+
+function getCubeCountForRound(round) {
+  if (round <= 1) return 1;
+  else if (round <= 2) return 2;
+  else if (round <= 3) return 3;
+  else if (round <= 4) return 4;
+  else if (round <= 5) return 5;
+  else if (round <= 6) return 6;
+  else if (round <= 7) return 7;
+  else if (round <= 8) return 8;
+  else if (round <= 9) return 9;
+  else return 10;
+}
+
+function screen2() {
+  push();
+  fill(random(20, 255), random(20, 255), random(20, 255));
+  translate(0, 0, 550);
+  rect(-1000, -1000, 10000, 10000);
+  pop();
+  push();
+  translate(0, 0, 552);
+  translate(-width / 2, -height / 2, 0);
+  textFont(myFont);
+  textSize(30);
+  fill(0);
+  text('Game Over.', 200, 30);
+  text(' Final Score:' + displacedPins, 200, 60);
+  pop();
 }
